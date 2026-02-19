@@ -811,7 +811,7 @@
       });
     })();
 
-    // Contact form (no backend here)
+    // Contact form — открытие почтового клиента пользователя (mailto)
     (() => {
       const form = qs("#contactForm");
       const note = qs("#formNote");
@@ -819,7 +819,24 @@
 
       form.addEventListener("submit", (e) => {
         e.preventDefault();
-        note.textContent = "Готово. Для реальной отправки подключите серверный обработчик (POST /api/contact).";
+        const name = form.name?.value?.trim() || "";
+        const email = form.email?.value?.trim() || "";
+        const message = form.message?.value?.trim() || "";
+
+        const to = "anna@kavpush.ru";
+        const subject = encodeURIComponent(`AI-Creator: новый запрос от ${name || "без имени"}`);
+        const bodyLines = [
+          name ? `Имя: ${name}` : "",
+          email ? `Email: ${email}` : "",
+          "",
+          "Сообщение:",
+          message || "(пусто)"
+        ].filter(Boolean);
+        const body = encodeURIComponent(bodyLines.join("\n"));
+
+        window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+
+        note.textContent = "Открылся почтовый клиент с письмом. Если письмо не создалось, напишите на anna@kavpush.ru.";
         form.reset();
       });
     })();
