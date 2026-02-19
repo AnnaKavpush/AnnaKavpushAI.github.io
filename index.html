@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>AI-Креатор — Художественные образы личности</title>
+  <meta name="description" content="Серия визуальных состояний, в которых ты увидишь себя иначе." />
+
+  <!--
+    Структура файлов (положите рядом с этим index.html):
+    assets/
+      img/
+        hero.png
+
+        g1.png  g2.png  g3.png  g4.png  g5.png  g6.png  g7.png  g8.png  g9.png
+        g10.png g11.png
+
+        o1.png o2.png o3.png o4.png
+  -->
+
+  <style>
+    :root{
+      --white:#FFFFFF;
+      --blue:#0A1C3A;
+      --blueAccent:#1E3A8A;
+      --muted:#6B7A99;
+
+      --container: 1280px;
+      --sidePad: 80px;
+      --radius: 18px;
+      --line: rgba(10,28,58,.18);
+      --shadow: 0 18px 55px rgba(10,28,58,.10);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    html{ scroll-behavior:smooth; }
+    body{
+      margin:0;
+      background:var(--white);
+      color:var(--blue);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      line-height:1.55;
+      text-rendering: geometricPrecision;
+      overflow-x:hidden;
+    }
+    img{ max-width:100%; display:block; }
+    a{ color:inherit; text-decoration:none; }
+
+    .container{
+      width:min(var(--container), calc(100% - (var(--sidePad) * 2)));
+      margin:0 auto;
+    }
+    .section{
+      padding: clamp(64px, 8vw, 120px) 0;
+    }
+
+    /* Topbar */
+    .topbar{
+      position:fixed; top:0; left:0; right:0;
+      z-index:50;
+      background:rgba(255,255,255,.72);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(10,28,58,.08);
+    }
+    .topbar__inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 0;
+    }
+    .brand{
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      letter-spacing:.2px;
+      font-size:18px;
+    }
+    .nav{
+      display:flex; gap:22px;
+      font-size:14px;
+      color:var(--muted);
+    }
+    .nav a{ position:relative; }
+    .nav a::after{
+      content:"";
+      position:absolute; left:0; bottom:-6px;
+      width:0%; height:1px;
+      background:var(--blueAccent);
+      transition: width .35s ease;
+    }
+    .nav a:hover::after{ width:100%; }
+
+    /* Typography */
+    .h1,.h2{
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      letter-spacing:-.02em;
+    }
+    .h1{
+      font-weight:650;
+      font-size: clamp(56px, 6vw, 92px);
+      line-height:1.02;
+      margin:0 0 18px;
+    }
+    .h2{
+      font-weight:650;
+      font-size: clamp(34px, 3.2vw, 48px);
+      line-height:1.1;
+      margin:0 0 12px;
+    }
+    .lead{
+      margin:0 0 26px;
+      font-size: clamp(16px, 1.4vw, 20px);
+      color:var(--muted);
+      max-width: 40ch;
+      line-height:1.6;
+    }
+    .micro{ font-size:13px; line-height:1.45; }
+    .muted{ color:var(--muted); }
+    .invert{ color:var(--white); }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:14px 22px;
+      border-radius:999px;
+      border:1px solid var(--blue);
+      color:var(--blue);
+      background:transparent;
+      transition: background .35s ease, color .35s ease, transform .35s ease;
+      will-change: transform;
+      cursor:pointer;
+    }
+    .btn:hover{
+      background:var(--blue);
+      color:var(--white);
+      transform: translateY(-1px);
+    }
+    .btn--invert{
+      border-color:var(--white);
+      color:var(--white);
+    }
+    .btn--invert:hover{
+      background:var(--white);
+      color:var(--blue);
+    }
+
+    /* Hero */
+    .hero{ padding-top:120px; }
+    .hero__grid{
+      display:grid;
+      grid-template-columns: 7fr 5fr;
+      gap: clamp(24px, 4vw, 56px);
+      align-items:end;
+    }
+    .hero__image{
+      position:relative;
+      height: clamp(520px, 72vh, 820px);
+    }
+    .hero__imageWrap{
+      position:absolute; inset:0;
+      overflow:hidden;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background:#f3f6ff;
+    }
+    .hero__imageWrap img{
+      width:100%;
+      height:110%;
+      object-fit:cover;
+      transform: scale(1.03);
+      transition: transform 1.2s ease;
+    }
+
+    /* Section head */
+    .section__head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:24px;
+      margin-bottom:28px;
+    }
+    .section__head p{ max-width:52ch; }
+
+    /* Gallery (как было): masonry, без принудительного 9:16 */
+    .masonry{
+      columns: 3 260px;
+      column-gap: 18px;
+    }
+    .tile{
+      border:0;
+      padding:0;
+      margin:0 0 18px;
+      width:100%;
+      background:transparent;
+      cursor:pointer;
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow: 0 10px 40px rgba(10,28,58,.08);
+      position:relative;
+    }
+    .tile img{
+      width:100%;
+      height:auto;            /* <-- как было */
+      transform: scale(1);
+      transition: transform .55s ease;
+    }
+    .tile:hover img{ transform: scale(1.02); }
+
+    /* Manifesto */
+    .manifesto{ background:var(--blue); }
+    .manifesto__wrap{ padding: clamp(40px, 5vw, 64px) 0; }
+    .manifesto__text{
+      width: min(56ch, 50%);
+      margin-top: 18px;
+    }
+    .manifesto__line{
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      font-size: clamp(20px, 2.2vw, 30px);
+      line-height:1.45;
+      color: rgba(255,255,255,.92);
+      margin:0 0 12px;
+    }
+
+    /* Series (o1..o4): snap-scroll + arrows + dots */
+    .seriesWrap{
+      position:relative;
+      width:100%;
+      padding: 6px 0 0;
+    }
+    .seriesTrack{
+      display:flex;
+      gap: 26px;
+      padding: 0 var(--sidePad);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .seriesTrack::-webkit-scrollbar{ display:none; }
+
+    .seriesCard{
+      margin:0;
+      flex: 0 0 min(78vw, 980px);
+      height: min(68vh, 720px);
+      border-radius: var(--radius);
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      background:#f7f9ff;
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+      position:relative;
+    }
+    .seriesCard img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+
+    .seriesNav{
+      position:absolute;
+      top:50%;
+      transform: translateY(-50%);
+      width:54px;
+      height:54px;
+      border-radius:999px;
+      border:1px solid rgba(10,28,58,.18);
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(10px);
+      color: var(--blue);
+      font-size:34px;
+      line-height:1;
+      cursor:pointer;
+      box-shadow: 0 14px 40px rgba(10,28,58,.10);
+      transition: transform .25s ease, background .25s ease, opacity .25s ease;
+      z-index:2;
+    }
+    .seriesNav:hover{ background: rgba(255,255,255,.92); transform: translateY(-50%) scale(1.03); }
+    .seriesNav:active{ transform: translateY(-50%) scale(.99); }
+    .seriesNav--prev{ left: 18px; }
+    .seriesNav--next{ right: 18px; }
+
+    .seriesDots{
+      display:flex;
+      gap:8px;
+      justify-content:center;
+      padding: 14px 0 0;
+    }
+    .seriesDot{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background: rgba(10,28,58,.22);
+      transition: transform .25s ease, background .25s ease;
+    }
+    .seriesDot.is-active{
+      background: rgba(30,58,138,.75);
+      transform: scale(1.35);
+    }
+
+    /* Invite */
+    .invite{ background:var(--blue); }
+    .invite__inner{
+      min-height: min(72vh, 640px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:18px;
+      text-align:center;
+    }
+
+    /* Contact form minimal lines */
+    .form{
+      width: min(720px, 100%);
+      margin-top:28px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-bottom:18px;
+    }
+    label{ font-size:13px; color:var(--muted); }
+    input, textarea{
+      border:0;
+      outline:none;
+      background:transparent;
+      padding:10px 0;
+      font-size:18px;
+      color:var(--blue);
+      border-bottom:1px solid var(--line);
+    }
+    input:focus, textarea:focus{
+      border-bottom-color: rgba(30,58,138,.6);
+    }
+    .form__row{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+    .footer{
+      margin-top:56px;
+      padding-top:18px;
+      border-top:1px solid rgba(10,28,58,.08);
+    }
+
+    /* Lightbox */
+    .lightbox{
+      position:fixed; inset:0;
+      z-index:100;
+      background: rgba(10,28,58,.92);
+      display:none;
+      align-items:center;
+      justify-content:center;
+    }
+    .lightbox.is-open{ display:flex; }
+    .lightbox__img{
+      max-width: min(92vw, 1200px);
+      max-height: 86vh;
+      border-radius:14px;
+      box-shadow: 0 22px 90px rgba(0,0,0,.35);
+    }
+    .lightbox__close{
+      position:absolute; top:18px; right:18px;
+      width:44px; height:44px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.25);
+      background: transparent;
+      color: var(--white);
+      font-size:28px;
+      cursor:pointer;
+    }
+    .lightbox__nav{
+      position:absolute; top:50%;
+      transform: translateY(-50%);
+      width:54px; height:54px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.25);
+      background: transparent;
+      color: var(--white);
+      font-size:34px;
+      cursor:pointer;
+    }
+    .lightbox__nav--prev{ left:18px; }
+    .lightbox__nav--next{ right:18px; }
+
+    /* Loader */
+    .loader{
+      position:fixed; inset:0;
+      z-index:200;
+      background: var(--white);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition: opacity .6s ease, visibility .6s ease;
+    }
+    .loader.is-hidden{ opacity:0; visibility:hidden; }
+    .loader__inner{ width:min(520px, 80vw); text-align:center; }
+    .loader__logo{
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      color: var(--blue);
+      font-size:28px;
+      margin-bottom:18px;
+      letter-spacing:-.01em;
+    }
+    .loader__line{
+      height:1px;
+      background: rgba(10,28,58,.18);
+      transform-origin:left;
+      animation: loadLine 1.2s ease-in-out infinite;
+    }
+    @keyframes loadLine{
+      0%{transform: scaleX(.2); opacity:.35}
+      50%{transform: scaleX(1); opacity:.9}
+      100%{transform: scaleX(.2); opacity:.35}
+    }
+
+    /* Reveal */
+    .reveal{
+      opacity:0;
+      transform: translateY(28px);
+      transition: opacity .9s ease, transform .9s ease;
+    }
+    .reveal.is-in{
+      opacity:1;
+      transform: translateY(0);
+    }
+    [data-reveal="hero-image"]{ transform: translateY(0); opacity:0; }
+    [data-reveal="hero-image"].is-in{ opacity:1; }
+    [data-byline]{ transform: translateY(22px); }
+
+    /* Custom cursor */
+    .cursor{
+      position:fixed;
+      top:0; left:0;
+      width:10px; height:10px;
+      border-radius:999px;
+      background: var(--blueAccent);
+      z-index:300;
+      pointer-events:none;
+      opacity:.9;
+      transform: translate(-50%, -50%);
+      transition: width .18s ease, height .18s ease, opacity .18s ease;
+    }
+    .cursor.is-hidden{ opacity:0; }
+    .cursor.is-big{ width:18px; height:18px; opacity:.65; }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      :root{ --sidePad: 22px; }
+      .nav{ display:none; }
+      .hero__grid{ grid-template-columns: 1fr; }
+      .hero__image{ height: min(64vh, 640px); }
+      .section__head{ flex-direction:column; align-items:flex-start; }
+      .manifesto__text{ width:100%; }
+      .seriesNav{ display:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader" id="loader" aria-hidden="true">
+    <div class="loader__inner">
+      <div class="loader__logo">AI-Creator</div>
+      <div class="loader__line"></div>
+    </div>
+  </div>
+
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="#hero" aria-label="На главную">AI-Creator</a>
+      <nav class="nav">
+        <a href="#gallery">Галерея</a>
+        <a href="#manifesto">Манифест</a>
+        <a href="#series">Серия</a>
+        <a href="#contact">Контакт</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1) HERO -->
+    <section class="section hero" id="hero">
+      <div class="container hero__grid">
+        <div class="hero__image reveal" data-reveal="hero-image">
+          <div class="hero__imageWrap" id="heroParallax">
+            <img src="assets/img/hero.png" alt="Портрет" loading="eager" decoding="async" />
+          </div>
+        </div>
+
+        <div class="hero__text">
+          <h1 class="h1 reveal" data-reveal>Художественные образы личности</h1>
+          <p class="lead reveal" data-reveal>Серия визуальных состояний, в которых ты увидишь себя иначе</p>
+          <div class="reveal" data-reveal>
+            <a class="btn" href="#contact">Начать проект</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2) GALLERY (g1..g11) -->
+    <section class="section" id="gallery">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="h2 reveal" data-reveal>Галерея присутствия</h2>
+          <p class="muted reveal" data-reveal>Только разный опыт.</p>
+        </div>
+
+        <div class="masonry" id="masonry">
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g1.png" aria-label="Открыть изображение g1"><img src="assets/img/g1.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g2.png" aria-label="Открыть изображение g2"><img src="assets/img/g2.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g3.png" aria-label="Открыть изображение g3"><img src="assets/img/g3.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g4.png" aria-label="Открыть изображение g4"><img src="assets/img/g4.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g5.png" aria-label="Открыть изображение g5"><img src="assets/img/g5.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g6.png" aria-label="Открыть изображение g6"><img src="assets/img/g6.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g7.png" aria-label="Открыть изображение g7"><img src="assets/img/g7.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g8.png" aria-label="Открыть изображение g8"><img src="assets/img/g8.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g9.png" aria-label="Открыть изображение g9"><img src="assets/img/g9.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g10.png" aria-label="Открыть изображение g10"><img src="assets/img/g10.png" alt="" loading="lazy" decoding="async" /></button>
+          <button class="tile reveal" data-reveal data-lightbox="assets/img/g11.png" aria-label="Открыть изображение g11"><img src="assets/img/g11.png" alt="" loading="lazy" decoding="async" /></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3) MANIFESTO -->
+    <section class="section manifesto" id="manifesto">
+      <div class="container">
+        <div class="manifesto__wrap">
+          <h2 class="h2 invert reveal" data-reveal></h2>
+          <div class="manifesto__text">
+            <p class="manifesto__line reveal" data-reveal data-byline>Ты уже другой, чем привык видеть себя.</p>
+            <p class="manifesto__line reveal" data-reveal data-byline>Образ — это не украшение.</p>
+            <p class="manifesto__line reveal" data-reveal data-byline>Это момент узнавания.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4) SERIES (o1..o4) -->
+    <section class="section" id="series">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="h2 reveal" data-reveal>Серия образов</h2>
+          <p class="muted reveal" data-reveal>Проект — это последовательность состояний, а не одна картинка.</p>
+        </div>
+      </div>
+
+      <div class="seriesWrap" aria-label="Серия образов">
+        <div class="seriesTrack" id="seriesTrack">
+          <figure class="seriesCard reveal" data-reveal><img src="assets/img/o1.png" alt="Образ 01" loading="lazy" decoding="async" /></figure>
+          <figure class="seriesCard reveal" data-reveal><img src="assets/img/o2.png" alt="Образ 02" loading="lazy" decoding="async" /></figure>
+          <figure class="seriesCard reveal" data-reveal><img src="assets/img/o3.png" alt="Образ 03" loading="lazy" decoding="async" /></figure>
+          <figure class="seriesCard reveal" data-reveal><img src="assets/img/o4.png" alt="Образ 04" loading="lazy" decoding="async" /></figure>
+        </div>
+
+        <button class="seriesNav seriesNav--prev" type="button" id="seriesPrev" aria-label="Предыдущий образ">‹</button>
+        <button class="seriesNav seriesNav--next" type="button" id="seriesNext" aria-label="Следующий образ">›</button>
+        <div class="seriesDots" id="seriesDots" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- 5) INVITE -->
+    <section class="section invite" id="invite">
+      <div class="container invite__inner">
+        <h2 class="h2 invert reveal" data-reveal>Начать художественный проект</h2>
+        <a class="btn btn--invert reveal" data-reveal href="#contact">Начать проект</a>
+      </div>
+    </section>
+
+    <!-- 6) CONTACT -->
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="h2 reveal" data-reveal>Контакт</h2>
+          <p class="muted reveal" data-reveal>Минимальная форма. Только линии.</p>
+        </div>
+
+        <form class="form reveal" data-reveal id="contactForm" autocomplete="on">
+          <div class="field">
+            <label for="name">Имя</label>
+            <input id="name" name="name" type="text" required />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="message">Сообщение</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+          </div>
+
+          <div class="form__row">
+            <button class="btn" type="submit">Отправить</button>
+            <span class="micro muted" id="formNote">Локальные изображения: assets/img/*.png</span>
+          </div>
+        </form>
+
+        <footer class="footer micro muted">
+          © <span id="year"></span> AI-Creator
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <!-- Lightbox (Gallery only) -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox__close" id="lbClose" aria-label="Закрыть">×</button>
+    <button class="lightbox__nav lightbox__nav--prev" id="lbPrev" aria-label="Предыдущее">‹</button>
+    <img class="lightbox__img" id="lbImg" alt="" />
+    <button class="lightbox__nav lightbox__nav--next" id="lbNext" aria-label="Следующее">›</button>
+  </div>
+
+  <script>
+    const qs = (s, el = document) => el.querySelector(s);
+    const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
+
+    // Loading screen
+    window.addEventListener("load", () => {
+      const loader = qs("#loader");
+      setTimeout(() => loader.classList.add("is-hidden"), 450);
+    });
+
+    // Year
+    qs("#year").textContent = String(new Date().getFullYear());
+
+    // Reveal on scroll (fade + up, stagger)
+    (() => {
+      const items = qsa("[data-reveal]");
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add("is-in");
+          io.unobserve(e.target);
+        });
+      }, { threshold: 0.18 });
+
+      items.forEach((el, i) => {
+        el.style.transitionDelay = `${Math.min(i * 0.12, 0.6)}s`;
+        io.observe(el);
+      });
+    })();
+
+    // Gentle parallax for hero (5–10%)
+    (() => {
+      const img = qs("#heroParallax img");
+      if (!img) return;
+
+      let raf = 0;
+      const onScroll = () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const y = window.scrollY || 0;
+          const shift = Math.max(-18, Math.min(18, y * 0.03));
+          img.style.transform = `translateY(${shift}px) scale(1)`;
+        });
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+    })();
+
+    // Lightbox (Gallery: fullscreen, only arrows)
+    (() => {
+      const lb = qs("#lightbox");
+      const img = qs("#lbImg");
+      const closeBtn = qs("#lbClose");
+      const prevBtn = qs("#lbPrev");
+      const nextBtn = qs("#lbNext");
+      const tiles = qsa("[data-lightbox]");
+
+      if (!lb || !img || tiles.length === 0) return;
+
+      const sources = tiles.map(t => t.getAttribute("data-lightbox"));
+      let idx = 0;
+
+      const open = (i) => {
+        idx = (i + sources.length) % sources.length;
+        img.src = sources[idx];
+        lb.classList.add("is-open");
+        lb.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      };
+
+      const close = () => {
+        lb.classList.remove("is-open");
+        lb.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        img.src = "";
+      };
+
+      const prev = () => open(idx - 1);
+      const next = () => open(idx + 1);
+
+      tiles.forEach((t, i) => t.addEventListener("click", () => open(i)));
+      closeBtn.addEventListener("click", close);
+      prevBtn.addEventListener("click", prev);
+      nextBtn.addEventListener("click", next);
+
+      lb.addEventListener("click", (e) => { if (e.target === lb) close(); });
+
+      window.addEventListener("keydown", (e) => {
+        if (!lb.classList.contains("is-open")) return;
+        if (e.key === "Escape") close();
+        if (e.key === "ArrowLeft") prev();
+        if (e.key === "ArrowRight") next();
+      });
+    })();
+
+    // Series controls (o1..o4): snap-scroll + arrows + dots
+    (() => {
+      const track = document.getElementById("seriesTrack");
+      const prev = document.getElementById("seriesPrev");
+      const next = document.getElementById("seriesNext");
+      const dotsWrap = document.getElementById("seriesDots");
+      if (!track || !prev || !next || !dotsWrap) return;
+
+      const cards = Array.from(track.querySelectorAll(".seriesCard"));
+      if (cards.length === 0) return;
+
+      const dots = cards.map((_, i) => {
+        const d = document.createElement("div");
+        d.className = "seriesDot" + (i === 0 ? " is-active" : "");
+        dotsWrap.appendChild(d);
+        d.addEventListener("click", () => scrollToIndex(i));
+        return d;
+      });
+
+      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+      const getActiveIndex = () => {
+        const rect = track.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+
+        let best = 0;
+        let bestDist = Infinity;
+        cards.forEach((card, i) => {
+          const r = card.getBoundingClientRect();
+          const c = r.left + r.width / 2;
+          const dist = Math.abs(c - centerX);
+          if (dist < bestDist) { bestDist = dist; best = i; }
+        });
+        return best;
+      };
+
+      const setActive = (i) => {
+        dots.forEach((d, idx) => d.classList.toggle("is-active", idx === i));
+        prev.style.opacity = i === 0 ? "0.35" : "1";
+        next.style.opacity = i === cards.length - 1 ? "0.35" : "1";
+      };
+
+      const scrollToIndex = (i) => {
+        i = clamp(i, 0, cards.length - 1);
+        cards[i].scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        setActive(i);
+      };
+
+      prev.addEventListener("click", () => scrollToIndex(getActiveIndex() - 1));
+      next.addEventListener("click", () => scrollToIndex(getActiveIndex() + 1));
+
+      let raf = 0;
+      track.addEventListener("scroll", () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          setActive(getActiveIndex());
+        });
+      }, { passive: true });
+
+      setActive(0);
+    })();
+
+    // Custom cursor
+    (() => {
+      const c = qs("#cursor");
+      if (!c) return;
+
+      const isTouch = matchMedia("(pointer: coarse)").matches;
+      if (isTouch) { c.classList.add("is-hidden"); return; }
+
+      let x = innerWidth / 2, y = innerHeight / 2;
+      let cx = x, cy = y;
+      const speed = 0.18;
+
+      const tick = () => {
+        cx += (x - cx) * speed;
+        cy += (y - cy) * speed;
+        c.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
+        requestAnimationFrame(tick);
+      };
+      tick();
+
+      addEventListener("mousemove", (e) => {
+        x = e.clientX; y = e.clientY;
+        c.classList.remove("is-hidden");
+      }, { passive:true });
+
+      addEventListener("mouseleave", () => c.classList.add("is-hidden"));
+
+      ["a","button",".btn",".tile","input","textarea",".seriesNav",".seriesDot"].forEach(sel => {
+        qsa(sel).forEach(el => {
+          el.addEventListener("mouseenter", () => c.classList.add("is-big"));
+          el.addEventListener("mouseleave", () => c.classList.remove("is-big"));
+        });
+      });
+    })();
+
+    // Contact form (no backend here)
+    (() => {
+      const form = qs("#contactForm");
+      const note = qs("#formNote");
+      if (!form) return;
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        note.textContent = "Готово. Для реальной отправки подключите серверный обработчик (POST /api/contact).";
+        form.reset();
+      });
+    })();
+  </script>
+</body>
+</html>
