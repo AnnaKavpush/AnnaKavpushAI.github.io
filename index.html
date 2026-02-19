@@ -313,6 +313,12 @@
       text-align:center;
     }
 
+    /* Contact */
+    .contact{ background:var(--blue); }
+    .contact .h2{ color:var(--white); }
+    .contact .muted{ color:rgba(255,255,255,.7); }
+    .contact .footer{ border-top-color:rgba(255,255,255,.15); color:rgba(255,255,255,.6); }
+
     /* Contact form minimal lines */
     .form{
       width: min(720px, 100%);
@@ -325,6 +331,7 @@
       margin-bottom:18px;
     }
     label{ font-size:13px; color:var(--muted); }
+    .contact label{ color:rgba(255,255,255,.6); }
     input, textarea{
       border:0;
       outline:none;
@@ -334,8 +341,15 @@
       color:var(--blue);
       border-bottom:1px solid var(--line);
     }
+    .contact input, .contact textarea{
+      color:rgba(255,255,255,.9);
+      border-bottom-color:rgba(255,255,255,.25);
+    }
     input:focus, textarea:focus{
       border-bottom-color: rgba(30,58,138,.6);
+    }
+    .contact input:focus, .contact textarea:focus{
+      border-bottom-color:rgba(255,255,255,.6);
     }
     .form__row{
       display:flex;
@@ -567,19 +581,11 @@
       </div>
     </section>
 
-    <!-- 5) INVITE -->
-    <section class="section invite" id="invite">
-      <div class="container invite__inner">
-        <h2 class="h2 invert reveal" data-reveal>Начать художественный проект</h2>
-        <a class="btn btn--invert reveal" data-reveal href="#contact">Начать проект</a>
-      </div>
-    </section>
-
-    <!-- 6) CONTACT -->
-    <section class="section" id="contact">
+    <!-- 5) CONTACT -->
+    <section class="section contact" id="contact">
       <div class="container">
         <div class="section__head">
-          <h2 class="h2 reveal" data-reveal>Контакт</h2>
+          <h2 class="h2 invert reveal" data-reveal>Контакт</h2>
           <!-- <p class="muted reveal" data-reveal>Минимальная форма. Только линии.</p> -->
         </div>
 
@@ -598,7 +604,7 @@
           </div>
 
           <div class="form__row">
-            <button class="btn" type="submit">Отправить</button>
+            <button class="btn btn--invert" type="submit">Отправить</button>
             <!-- <span class="micro muted" id="formNote">Локальные изображения: assets/img/*.png</span> -->
           </div>
         </form>
